@@ -46,6 +46,14 @@
         .latex-input {
             margin-bottom: 20px;
         }
+        #latex-preview {
+            padding: 10px;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-height: 100px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -58,12 +66,22 @@
     <form id="response-form">
         <label for="response-latex">Écrivez votre réponse en LaTeX :</label><br>
         <textarea id="response-latex" placeholder="Entrez votre réponse en LaTeX ici..."></textarea><br><br>
-        
+
+        <!-- Nouvelle case pour afficher le rendu dynamique LaTeX -->
+        <label>Prévisualisation dynamique :</label><br>
+        <div id="latex-preview" class="latex-input"></div><br>
+
         <input type="hidden" id="current-message-id">
         <button type="submit">Envoyer Réponse</button>
     </form>
     
     <script>
+        document.getElementById('response-latex').addEventListener('input', function() {
+            const previewDiv = document.getElementById('latex-preview');
+            previewDiv.innerHTML = this.value;
+            renderMath(); // Re-rendre MathJax pour afficher LaTeX correctement
+        });
+
         function renderMath() {
             MathJax.typesetPromise().then(() => {
                 console.log('MathJax has finished rendering.');
@@ -71,12 +89,12 @@
                 console.error('MathJax error:', err);
             });
         }
-        
+
         function loadSubmissions() {
             const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
             const submissionsDiv = document.getElementById('submissions');
             submissionsDiv.innerHTML = '';
-            
+
             submissions.forEach((submission, index) => {
                 const responseHtml = submission.response ? `
                     <div>
@@ -126,3 +144,4 @@
     </script>
 </body>
 </html>
+
