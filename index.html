@@ -34,7 +34,7 @@
             box-sizing: border-box;
             margin-bottom: 20px;
         }
-        #submissions, #pending-corrections, #viewed-submissions {
+        #submissions, #pending-corrections, #viewed-submissions, #block-user-section {
             padding: 10px;
             background-color: #fff;
             border: 1px solid #ccc;
@@ -54,8 +54,11 @@
             min-height: 100px;
             font-size: 16px;
         }
-        .comment-box {
+        .comment-box, .block-user-box {
             margin-top: 10px;
+        }
+        .block-user-box select {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -84,6 +87,22 @@
         <button type="submit">Envoyer Réponse</button>
     </form>
     
+    <h2>Blocage d'Utilisateur</h2>
+    <div id="block-user-section">
+        <label for="block-username">Nom de Soumetteur :</label>
+        <input type="text" id="block-username" placeholder="Entrez le nom de soumetteur"><br>
+
+        <label for="block-duration">Durée de Blocage :</label>
+        <select id="block-duration">
+            <option value="1">1 jour</option>
+            <option value="3">3 jours</option>
+            <option value="7">7 jours</option>
+            <option value="30">30 jours</option>
+        </select><br>
+
+        <button onclick="blockUser()">Bloquer Utilisateur</button>
+    </div>
+
     <script>
         document.getElementById('response-latex').addEventListener('input', function() {
             const previewDiv = document.getElementById('latex-preview');
@@ -110,6 +129,10 @@
             viewedSubmissionsDiv.innerHTML = '';
 
             submissions.forEach((submission, index) => {
+                // Vérifier si l'utilisateur est bloqué
+                const isBlocked = checkIfUserBlocked(submission.firstName);
+                
+                // Créer les éléments HTML
                 const responseHtml = submission.response ? `
                     <div>
                         <div class="latex-input">${submission.response.latex}</div>
@@ -124,8 +147,8 @@
                         <div class="latex-input">${submission.latex}</div>
                         <p><strong>Date :</strong> ${new Date(submission.date).toLocaleString()}</p>
                         ${responseHtml}
-                        <button onclick="editResponse(${index})">Répondre</button>
-                        <button onclick="markAsReviewed(${index})">Marquer comme Vu</button>
+                        ${isBlocked ? '' : '<button onclick="editResponse(${index})">Répondre</button>'}
+                        ${isBlocked ? '' : '<button onclick="markAsReviewed(${index})">Marquer comme Vu</button>'}
                         <div class="comment-box">
                             <label for="comment-${index}">Ajouter un commentaire :</label><br>
                             <textarea id="comment-${index}" placeholder="Entrez un commentaire..."></textarea><br>
@@ -143,6 +166,16 @@
             });
 
             renderMath();
+        }
+
+        function checkIfUserBlocked(username) {
+            const blockedUsers = JSON.parse(localStorage.getItem('blockedUsers') || '[]');
+            const now = new Date().getTime();
+            const userBlock = blockedUsers.find(user => user.username === username);
+            if (userBlock) {
+                return now < userBlock.unblockTime;
+            }
+            return false;
         }
 
         function editResponse(index) {
@@ -184,6 +217,28 @@
             const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
             submissions[index].reviewed = true;
             localStorage.setItem('submissions', JSON.stringify(submissions));
+            loadSubmissions();
+        }
+
+        function blockUser() {
+            const username = document.getElementById('block-username').value;
+            const duration = parseInt(document.getElementById('block-duration').value, 10);
+            if (!username || !duration) {
+                alert('Veuillez entrer un nom de soumetteur et choisir une durée de blocage.');
+                return;
+            }
+            
+            const blockedUsers = JSON.parse(localStorage.getItem('blockedUsers') || '[]');
+            const now = new Date().getTime();
+            const unblockTime = now + (duration * 24 * 60 * 60 * 1000); // durée en millisecondes
+
+            const existingUser = blockedUsers.find(user => user.username === username);
+            if (existingUser) {
+                existingUser.unblockTime = unblockTime;
+            } else {
+                blockedUsers.push({ username: username, unblockTime: unblockTime });
+            }
+            localStorage.setItem('blockedUsers', JSON.stringify(blockedUsers));
             loadSubmissions();
         }
 
