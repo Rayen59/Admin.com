@@ -46,13 +46,6 @@
         .latex-input {
             margin-bottom: 20px;
         }
-        #sender-info {
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
@@ -69,9 +62,6 @@
         <input type="hidden" id="current-message-id">
         <button type="submit">Envoyer Réponse</button>
     </form>
-    
-    <h2>Informations sur l'Expéditeur</h2>
-    <div id="sender-info">Sélectionnez un message pour afficher les détails de l'expéditeur.</div>
     
     <script>
         function renderMath() {
@@ -130,14 +120,6 @@
                 loadSubmissions();
                 document.getElementById('response-latex').value = '';
             };
-
-            // Display sender info
-            const senderInfo = document.getElementById('sender-info');
-            senderInfo.innerHTML = `
-                <p><strong>Nom :</strong> ${submission.firstName} ${submission.lastName}</p>
-                <p><strong>Email :</strong> ${submission.email}</p>
-                <p><strong>Date du message :</strong> ${new Date(submission.date).toLocaleString()}</p>
-            `;
         }
 
         window.onload = loadSubmissions;
